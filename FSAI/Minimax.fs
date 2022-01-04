@@ -37,3 +37,19 @@ module Minimax =
     let newMinB isMaxPlayer b bestScore = 
          if( not isMaxPlayer) then min bestScore b
          else b   
+
+
+    
+
+    let rec minimaxAlphaBeta (board:byte[,]) (depth:int) (a:int) (b:int) (tile:Byte) (isMaxPlayer:bool) (getWinner: byte[,] -> byte) (makeMove: byte[,] -> int * int-> byte -> byte[,]) (getValidMoves) (evaluation: byte[,] -> int) (otherTile: byte -> byte) =
+        let validMovesResizeArray:ResizeArray<Tuple<int,int>> = getValidMoves board tile 
+        let validMoves = validMovesResizeArray.ToArray() |> Array.toList
+        let emptyByte:byte = byte 0
+        let winnerExist =  (getWinner board) <> emptyByte
+        if(depth = 0 || winnerExist ) then evaluation board
+        else
+            let childBoard:Byte[,] = Array2D.copy board
+            let bestScore = getFakeBestScore isMaxPlayer
+
+    
+
