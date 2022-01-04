@@ -317,6 +317,7 @@ namespace Reversi
             return evaluation;
         }
 
+        //Wrapping functions to use them in Minimax.fs file
         public static int MinimaxAlphaBeta(byte[,] board, int depth, int a, int b, byte tile, bool isMaxPlayer)
         {
             var getWinnerFunc = FuncConvert.ToFSharpFunc<byte[,], byte>(t => GetWinner(t));
@@ -328,7 +329,7 @@ namespace Reversi
             var getValidMovesFunc = FuncConvert.FuncFromTupled(wrapGetValidMovesFunc);
 
 
-
+            //Return the value we get from F# minimax function
             return FSAI.Minimax.minimaxAlphaBeta(board, depth, a, b, tile, isMaxPlayer, getWinnerFunc, makeMoveFunc, getValidMovesFunc, wrapEvaluationFunc, wrapOtherTileFunc);
         }
 
