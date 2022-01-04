@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using Microsoft.FSharp.Core;
+using Microsoft.FSharp.Collections;
 namespace Reversi
 {
     public class Game
@@ -250,7 +251,7 @@ namespace Reversi
             return validMoves;
         }
 
-        public static void MakeMove(byte[,] board, Tuple<int, int> move, byte tile)
+        public static byte[,] MakeMove(byte[,] board, Tuple<int, int> move, byte tile)
         {
             List<Tuple<int, int>> flippedPieces = GetFlippedPieces(board, move, tile);
             foreach (Tuple<int, int> flippedPiece in flippedPieces)
@@ -261,6 +262,7 @@ namespace Reversi
             {
                 board[move.Item1, move.Item2] = tile;
             }
+            return board;
         }
 
         public static int CountCorners(byte[,] board, byte tile)
@@ -317,44 +319,17 @@ namespace Reversi
 
         public static int MinimaxAlphaBeta(byte[,] board, int depth, int a, int b, byte tile, bool isMaxPlayer)
         {
-            // The heart of our AI. Minimax algorithm with alpha-beta pruning to speed up computation.
-            // Higher search depths = greater difficulty.
-            if (depth == 0 || GetWinner(board) != Empty)
-            {
-                return Evaluation(board);
-            }
-            int bestScore;
-            if (isMaxPlayer) bestScore = int.MinValue;
-            else bestScore = int.MaxValue;
-            List<Tuple<int, int>> validMoves = GetValidMoves(board, tile);
-            if (validMoves.Count > 0)
-            {
-                foreach (Tuple<int, int> move in validMoves)
-                {
-                    byte[,] childBoard = board.Clone() as byte[,];
-                    MakeMove(childBoard, move, tile);
-                    int nodeScore = MinimaxAlphaBeta(childBoard, depth - 1, a, b, OtherTile(tile), !isMaxPlayer);
-                    if (isMaxPlayer)
-                    {
-                        bestScore = Math.Max(bestScore, nodeScore);
-                        a = Math.Max(bestScore, a);
-                    }
-                    else
-                    {
-                        bestScore = Math.Min(bestScore, nodeScore);
-                        b = Math.Min(bestScore, b);
-                    }
-                    if (b <= a)
-                    {
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                return MinimaxAlphaBeta(board, depth, a, b, OtherTile(tile), !isMaxPlayer);
-            }
-            return bestScore;
+            var getWinnerFunc = FuncConvert.ToFSharpFunc<byte[,], byte>(t => GetWinner(t));
+            var wrapMakeMoveFunc = FuncConvert.ToFSharpFunc<Tuple<byte[,], Tuple<int, int>, byte>, byte[,]>(t => MakeMove(t.Item1, t.Item2, t.Item3));
+            var wrapEvaluationFunc = FuncConvert.ToFSharpFunc<byte[,], int>(t => Evaluation(t));
+            var wrapGetValidMovesFunc = FuncConvert.ToFSharpFunc<Tuple<byte[,], byte>, List<Tuple<int, int>>>(t => GetValidMoves(t.Item1, t.Item2));
+            var wrapOtherTileFunc = FuncConvert.ToFSharpFunc<byte, byte>(t => OtherTile(t));
+            var makeMoveFunc = FuncConvert.FuncFromTupled(wrapMakeMoveFunc);
+            var getValidMovesFunc = FuncConvert.FuncFromTupled(wrapGetValidMovesFunc);
+
+
+
+            return FSAI.Minimax.minimaxAlphaBeta(board, depth, a, b, tile, isMaxPlayer, getWinnerFunc, makeMoveFunc, getValidMovesFunc, wrapEvaluationFunc, wrapOtherTileFunc);
         }
 
         public static Tuple<int, int> GetAIMove(byte[,] board, int depth, byte tile)
