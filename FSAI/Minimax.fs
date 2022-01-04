@@ -51,5 +51,17 @@ module Minimax =
             let childBoard:Byte[,] = Array2D.copy board
             let bestScore = getFakeBestScore isMaxPlayer
 
+            let rec bestScoreResult a b childBoard bestScore moves = 
+                match moves with
+                    |[] -> bestScore
+                    |head::tail -> 
+                        let nodeScore = minimaxAlphaBeta childBoard (depth-1) a b (otherTile tile) (not isMaxPlayer) getWinner makeMove getValidMoves  evaluation  otherTile 
+                        let newBoard = makeMove childBoard head tile 
+                        let newA = newAF isMaxPlayer nodeScore a 
+                        let newB =  newBF isMaxPlayer nodeScore b
+                        let newBestScore = minOrMax  isMaxPlayer bestScore nodeScore
+                        if(shouldBreak isMaxPlayer newBestScore newA newB ) then newBestScore
+                        else bestScoreResult newA newB newBoard newBestScore tail
+
     
 
